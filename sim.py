@@ -77,11 +77,14 @@ class CrossBar:
 if __name__ == '__main__':
     f = open('code.txt','r')
     lines = f.readlines()
-    inp = np.random.randint(-1,1,(1,256,14,14))
-    wgt = np.random.randint(-1,1,(256,256,3,3))
+    inp = np.random.randint(-128,127,(1,256,14,14))
+    wgt = np.random.randint(-128,127,(256,256,3,3))
     from topi.testing import conv2d_nchw_python
     target = conv2d_nchw_python(inp,wgt,1,1)
-
+    target = target.reshape(128,14*14*2).transpose(1,0)
+    inp = inp.reshape((128,14*14*2)).transpose(1,0)
+    wgt = wgt.reshape((128,2,128,2,3,3)).transpose(0,2,1,3,4,5).reshape((128,128,2*2*3*3)).transpose(2,1,0)
+    out = np.zeros((2*14*14,128))
     device = CrossBar()
     for line in lines:
         if "DepPush" in line:
@@ -131,5 +134,6 @@ if __name__ == '__main__':
             exit()
     import tvm
     tvm.testing.assert_allclose(target, out)
+    # print(out[12]) 
 
     
